@@ -1,0 +1,6 @@
+# Host setup
+## Intermediate files
+host_setup/cache
+host_setup/auth/*
+# Encrypted secret files
+!host_setup/auth/*.age

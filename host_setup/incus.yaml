@@ -1,0 +1,7 @@
+apply_defaults: true
+preseed:
+  certificates:
+    - name: admin
+      type: client
+      description: Initial admin client
+      certificate: |-
