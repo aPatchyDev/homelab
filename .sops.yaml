@@ -1,0 +1,8 @@
+stores:
+  yaml:
+    indent: 2
+
+creation_rules:
+  - path_regex: secret_.*
+    age: >-
+      age13n7alswx94tulmsefa59jrzeuynd49q4jcerdhypy52x6pc53ups28uzn7

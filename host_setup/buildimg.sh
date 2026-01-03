@@ -23,7 +23,7 @@ fi
 # Get certificate
 AUTH_DIR='./auth'
 mkdir -p $AUTH_DIR
-CLIENT_CERT="${AUTH_DIR}/client.crt"
+CLIENT_CERT="${AUTH_DIR}/secret_client.crt"
 if [ ! -f $CLIENT_CERT ]; then
 	if ! command -v incus >/dev/null 2>&1; then
 		>&2 echo 'Incus CLI unavailable. Aborting...'

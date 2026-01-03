@@ -20,7 +20,8 @@ fi
 # Add node to Incus CLI
 NODE_NAME='homelab'
 NODE_IP='192.168.123.111'
+RECOVERY_FILE="${AUTH_DIR}/secret_recovery.yaml"
 
 incus remote add $NODE_NAME $NODE_IP
 incus remote switch $NODE_NAME
-incus admin os system security show > ${AUTH_DIR}/recovery.yaml
+incus admin os system security show > $RECOVERY_FILE
