@@ -21,9 +21,23 @@ fi
 # Generate install seed tarball
 TAR_FILE="seed.tar"
 UNCHANGED='install.yaml'
-CHANGED='incus.yaml'
+CHANGED='incus.yaml network.yaml'
 
-yq ".preseed.certificates[].certificate = (load_str(\"${CLIENT_CERT}\") | trim)" ./incus.yaml > ${CACHE_DIR}/incus.yaml
+CERT="$CLIENT_CERT" yq '
+	load("../secret_device.json").minipc.nic as $nic |
+	.preseed.certificates[0].certificate = (load_str(strenv(CERT)) | trim) |
+	.preseed.networks[0].config."bridge.external_interfaces" = ($nic | map(.name) | join(","))
+' ./incus.yaml > ${CACHE_DIR}/incus.yaml
+
+HOSTNAME="$NODE_NAME" yq '
+	load("../secret_device.json").minipc.nic as $nic |
+	.config.dns.hostname = strenv(HOSTNAME) |
+	.config.interfaces = ($nic | map(
+		{"name": .name, "ethernet": {} }
+	)) |
+	.config.interfaces style=""
+' ./network.yaml > ${CACHE_DIR}/network.yaml
+#HOSTNAME="$NODE_NAME" yq '.config.dns.hostname = strenv(HOSTNAME)' ./network.yaml > ${CACHE_DIR}/network.yaml
 
 tar -cf "${CACHE_DIR}/${TAR_FILE}" $UNCHANGED -C $CACHE_DIR $CHANGED
 

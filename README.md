@@ -35,6 +35,10 @@ Configure the environment to supply age key file before running `setup.sh`
 - Public service
 	- Primarily host services for LAN
 
+## .trash/
+
+Archive for abandoned tech stack
+
 ## Secrets
 
 Homelab IaC will require storing secrets in some form.  

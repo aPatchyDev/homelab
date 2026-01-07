@@ -42,6 +42,11 @@ Choice: Incus OS
 - force_install: Wipe disk on install
 - preseed.security.missing_tpm: Disable TPM requirement
 	- Install will halt if seed does not explicitly allow swtpm
+- [apply_defaults](https://linuxcontainers.org/incus-os/docs/main/reference/applications/incus/)
+	- Create default storage pool
+	- Create local network bridge
+	- Set trusted client certificates
+	- Listen on port 8443
 
 Cannot use Web image downloader
 - extra json fields in request body are silently dropped

@@ -1,0 +1,14 @@
+apply_defaults: true
+preseed:
+  certificates:
+    - name: admin
+      type: client
+      description: Initial admin client
+      certificate: |-
+  networks:
+    - name: "host-switch"
+      type: bridge
+      config:
+        bridge.external_interfaces: ""
+        ipv4.nat: "false"
+        ipv4.dhcp: "true"
