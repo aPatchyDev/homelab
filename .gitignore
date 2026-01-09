@@ -1,2 +1,6 @@
 # Host setup
 cache/
+
+# Terraform / OpenTofu
+.terraform/
+*.tfstate.backup

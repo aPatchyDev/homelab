@@ -1,1 +1,2 @@
 secret_* filter=sops diff=sops
+*.tfstate filter=sops diff=sops
