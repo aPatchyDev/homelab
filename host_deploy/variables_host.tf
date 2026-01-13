@@ -45,14 +45,20 @@ variable "host_web_password" {
 }
 
 # Proxmox ssh
-locals {
-	# Proxmox node address as IP / FQDN
-	host_ssh_address = var.host_fqdn != "" ? var.host_fqdn : var.host_ip4.address
-}
-
 variable "host_ssh_port" {
 	description = "Proxmox ssh port"
 	type = number
 	ephemeral = true
 	default = 22
+}
+
+# Proxmox storage
+variable "host_storage_vdisk" {
+	description = "Proxmox storage for VM / LXC virtual disk"
+	type = string
+}
+
+variable "host_storage_management" {
+	description = "Proxmox storage for ISO / Backup / Template"
+	type = string
 }

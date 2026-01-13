@@ -1,10 +1,15 @@
 terraform {
 	required_version = ">= 1.11.0"
 
+	backend "local" {
+		# Prevent backup files cluttering the directory
+		path = "state/terraform.tfstate"
+	}
+
 	required_providers {
 		proxmox = {
 			source = "bpg/proxmox"
-			version = "0.91.0"
+			version = "0.93.0"
 		}
 	}
 }
