@@ -3,6 +3,11 @@ output "vm" {
 	value = proxmox_virtual_environment_vm.this
 }
 
+output "ipv4" {
+	description = "List of IPv4 addresses"
+	value = [for it in proxmox_virtual_environment_vm.this.ipv4_addresses : it if length(it) > 0]
+}
+
 resource "proxmox_virtual_environment_vm" "this" {
 	node_name = var.node_name
 
@@ -24,6 +29,9 @@ resource "proxmox_virtual_environment_vm" "this" {
 
 	agent {
 		enabled = var.qemu_agent
+		wait_for_ip {
+			ipv4 = true
+		}
 	}
 
 	# Network
@@ -39,7 +47,9 @@ resource "proxmox_virtual_environment_vm" "this" {
 		datastore_id = var.datastore_id
 		cache = "writeback"
 		aio = "io_uring"
-		iothread = true
+		# IPv4 addresses are not populated if set incorrectly
+		# https://github.com/bpg/terraform-provider-proxmox/issues/776#issuecomment-1848801583
+		iothread = var.scsi_hardware == "virtio-scsi-single"
 		ssd = true
 		discard = "on"
 		file_format = "raw"
