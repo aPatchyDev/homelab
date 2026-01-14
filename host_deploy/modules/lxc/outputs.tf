@@ -15,6 +15,12 @@ resource "proxmox_virtual_environment_container" "this" {
 	initialization {
 		hostname = var.name
 
+		ip_config {
+			ipv4 {
+				address = "dhcp"
+			}
+		}
+
 		user_account {
 			password = var.password
 		}
