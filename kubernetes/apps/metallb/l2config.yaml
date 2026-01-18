@@ -1,0 +1,17 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lan-pool
+  namespace: metallb-system
+spec:
+  # Have services explicitly request IP to prevent address changing
+  # Disable auto-assign to fail fast on mistakes
+  autoAssign: false
+  addresses:
+    - 192.168.123.201-192.168.123.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: homelab-l2lb
+  namespace: metallb-system
