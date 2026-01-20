@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: network-test
+spec:
+  selector:
+    matchLabels:
+      app: network-test
+  template:
+    metadata:
+      labels:
+        app: network-test
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
