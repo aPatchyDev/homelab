@@ -5,3 +5,4 @@ resources:
   - ../../bootstrap
 patches:
   - path: service-patch.yaml
+  - path: user.yaml
