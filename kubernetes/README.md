@@ -40,15 +40,15 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 1. Install Argo CD via `kubectl apply --server-side -k ./bootstrap`
 	> Failing to add `--server-side` results in an error:  
 	> `The CustomResourceDefinition "applicationsets.argoproj.io" is invalid: metadata.annotations: Too long: may not be more than 262144 bytes`  
-	> [Known issue](https://argo-cd.readthedocs.io/en/latest/operator-manual/upgrading/3.2-3.3/#applicationset-crd-exceeds-the-size-limit-for-client-side-apply)
+	> [Known issue](https://argo-cd.readthedocs.io/en/latest/operator-manual/upgrading/3.2-3.3/#applicationset-crd-exceeds-the-size-limit-for-client-side-apply)  
+
+	> Acquire initial Argo CD web UI password: `kubectl get secrets -n argocd argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`  
+	> Access Argo CD web UI: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
 2. Register Gitlab access token via `./bootstrap/setgitlab.sh '<access token>'`
 	> Require `Maintainer` role + `read_api` scope  
 	> [Reference](https://docs.gitlab.com/user/permissions/#project-cicd)
 3. Instantiate Root app via `kubectl apply -f ./apps/root/root.yaml`
-	> Acquire initial Argo CD web UI password: `kubectl get secrets -n argocd argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`  
-	> Access Argo CD web UI: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
-4. Update Argo CD user via `./bootstrap/setpw.sh <username> '<bcrypt hash>'`
-	> Assumes `<username>` role is login only
+	> Ensure Argo CD credentials are set in Gitlab
 
 ## Deploying a new application
 
