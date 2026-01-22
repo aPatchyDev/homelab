@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm
+  namespace: argocd
+data:
+  # Necessary to fix default values being detected as out of sync
+  # https://github.com/argoproj/argo-cd/issues/13004#issuecomment-1650616710
+  controller.diff.server.side: "true"

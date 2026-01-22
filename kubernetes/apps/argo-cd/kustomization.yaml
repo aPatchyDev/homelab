@@ -7,3 +7,4 @@ resources:
 patches:
   - path: service-patch.yaml
   - path: user.yaml
+  - path: config-patch.yaml
