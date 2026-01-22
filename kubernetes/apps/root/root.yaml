@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/aPatchyDev/homelab.git
-    targetRevision: HEAD
+    targetRevision: main
     path: kubernetes/apps/root
     directory:
       recurse: true

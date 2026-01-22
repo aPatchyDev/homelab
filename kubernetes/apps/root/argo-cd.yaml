@@ -11,7 +11,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/aPatchyDev/homelab.git
-    targetRevision: HEAD
+    targetRevision: main
     path: kubernetes/apps/argo-cd
   destination:
     server: https://kubernetes.default.svc
