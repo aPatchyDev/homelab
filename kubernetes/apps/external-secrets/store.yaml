@@ -1,0 +1,15 @@
+apiVersion: external-secrets.io/v1
+kind: ClusterSecretStore
+metadata:
+  name: gitlab-secret-store
+spec:
+  provider:
+    gitlab:
+      # https://gitlab.com/aPatchyDev/homelab-secrets
+      projectID: "77899685"
+      auth:
+        SecretRef:
+          accessToken:
+            name: gitlab-auth-secret
+            namespace: external-secrets
+            key: token

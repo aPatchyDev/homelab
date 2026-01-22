@@ -64,3 +64,47 @@ Choice: Encrypted secrets with SOPS
 - Try something new
 	- Only possible because this homelab is intended for internal LAN only
 	- Gitlab appears to be the most sensible choice for future personal projects
+
+### Kubernetes
+
+Deploying secrets to kubernetes services require additional integration effort.
+
+#### SOPS
+
+Since this repository already uses SOPS, this was the first choice.
+
+- [KSOPS](https://github.com/viaduct-ai/kustomize-sops)
+	- Invasively patch Argo CD service
+	- Secrets are managed by Argo CD [which is not recommended](https://argo-cd.readthedocs.io/en/stable/operator-manual/secret-management/)
+- [isindir SOPS operator](https://github.com/isindir/sops-secrets-operator)
+	- Secrets are managed by Argo CD [which is not recommended](https://argo-cd.readthedocs.io/en/stable/operator-manual/secret-management/)
+	- Poor documentation
+	- Require only data fields to be encrypted
+- [peak-scale SOPS operator](https://github.com/peak-scale/sops-operator)
+	- Poor documentation
+	- Require only data fields to be encrypted
+
+Since none of the options integrate well with the existing setup, there was no reason to require SOPS.
+
+#### Self hosted secret manager
+
+Requires stateful storage, creating a circular dependency
+
+#### Cloud based secret manager
+
+To retrieve secrets outside the git repository, I chose to use [external-secrets](https://external-secrets.io/latest/).
+
+- [Hashicorp Vault](https://www.hashicorp.com/en/products/vault)
+	- Company has history of rug-pulling
+- [Google Cloud Secret Manager](https://cloud.google.com/security/products/secret-manager)
+	- Free tier allows very small number of secrets
+	- Uncertain when [Always Free](https://docs.cloud.google.com/free/docs/free-cloud-features#secret-manager) policy will change
+- [Gitlab CI/CD variables](https://docs.gitlab.com/api/project_level_variables/)
+	- Not originally designed to be a secret manager
+
+---
+
+If I am going to use an external provider, it would be easier to manage if everything uses the same provider.  
+Hence [Gitlab](https://gitlab.com/aPatchyDev/homelab-secrets) was chosen.
+- Terraform state
+- Kubernetes secrets

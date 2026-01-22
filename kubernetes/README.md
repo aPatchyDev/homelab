@@ -41,10 +41,13 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 	> Failing to add `--server-side` results in an error:  
 	> `The CustomResourceDefinition "applicationsets.argoproj.io" is invalid: metadata.annotations: Too long: may not be more than 262144 bytes`  
 	> [Known issue](https://argo-cd.readthedocs.io/en/latest/operator-manual/upgrading/3.2-3.3/#applicationset-crd-exceeds-the-size-limit-for-client-side-apply)
-2. Instantiate Root app via `kubectl apply -f ./apps/root/root.yaml`
+2. Register Gitlab access token via `./bootstrap/setgitlab.sh '<access token>'`
+	> Require `Maintainer` role + `read_api` scope  
+	> [Reference](https://docs.gitlab.com/user/permissions/#project-cicd)
+3. Instantiate Root app via `kubectl apply -f ./apps/root/root.yaml`
 	> Acquire initial Argo CD web UI password: `kubectl get secrets -n argocd argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d`  
 	> Access Argo CD web UI: `kubectl port-forward svc/argocd-server -n argocd 8080:443`
-3. Update Argo CD user via `./bootstrap/setpw.sh <username> '<bcrypt hash>'`
+4. Update Argo CD user via `./bootstrap/setpw.sh <username> '<bcrypt hash>'`
 	> Assumes `<username>` role is login only
 
 ## Deploying a new application
@@ -83,3 +86,35 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 - Future plans
 	- Consider [Cilium](https://cilium.io/)
 		- Can handle L4 + L7 load balancing
+
+## Storage & Secrets
+
+Configuring networking to work with domain names require a DNS server with stateful persistent storage.  
+Since a service can be deployed to any of the worker nodes, using local storage of each kubernetes node (VM) is not desirable.  
+A better solution is to utilize the storage available in the hypervisor host.
+
+### Storage options
+
+- NFS server + [NFS provisioner](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)
+	- Slow IO
+- [Proxmox CSI plugin](https://github.com/sergelogvinov/proxmox-csi-plugin)
+	- Require clustering proxmox nodes
+	- Require correct labeling of kubernetes
+		- Excessive coupling of hypervisor and kubernetes configuration
+	- Require VM `SCSI Controller` set to `VirtIO SCSI | VirtIO SCSI Single`
+	- Require Proxmox API token
+- ZFS + [Democratic CSI](https://github.com/democratic-csi/democratic-csi) using iSCSI
+	- Require root SSH connection
+		- Can also use user with passwordless sudo for ZFS related commands
+- [Ceph](https://ceph.io/en/) / [Longhorn](https://longhorn.io/) / [OpenEBS](https://openebs.io/)
+	- Operates on distributed storage arrays with replication
+		- Great for resilliency if physically distinct storage
+		- IO amplification if virtualized on same physical disk
+	- CPU / memory overhead
+
+Democratic CSI was chosen for the following reasons:
+- Decouple hypervisor and kubernetes
+- Minimal overhead for single disk host
+
+Choosing a storage backend that lives outside kubernetes creates a dependency on managing kubernetes secrets.  
+Refer to [../README.md#secrets](../README.md#secrets)
