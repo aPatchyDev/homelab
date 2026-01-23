@@ -7,3 +7,11 @@ data:
   # Necessary to fix default values being detected as out of sync
   # https://github.com/argoproj/argo-cd/issues/13004#issuecomment-1650616710
   controller.diff.server.side: "true"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+data:
+  kustomize.buildOptions: "--enable-helm"

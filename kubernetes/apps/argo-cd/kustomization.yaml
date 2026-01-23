@@ -6,5 +6,5 @@ resources:
   - password.yaml
 patches:
   - path: service-patch.yaml
-  - path: user.yaml
+  - path: user-patch.yaml
   - path: config-patch.yaml
