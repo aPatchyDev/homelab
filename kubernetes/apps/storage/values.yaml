@@ -14,7 +14,9 @@ node:
         value: nsenter
       - name: ISCSIADM_HOST_PATH
         value: /usr/local/sbin/iscsiadm
-    iscsiDirHostPath: /usr/local/etc/iscsi
+    # Democratic CSI instructions are outdated
+    # https://github.com/siderolabs/extensions/issues/688
+    iscsiDirHostPath: /var/iscsi
     iscsiDirHostPathType: ""
 
 storageClasses:
