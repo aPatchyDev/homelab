@@ -1,0 +1,32 @@
+csiDriver:
+  name: "ZFS-iSCSI"
+
+driver:
+  existingConfigSecret: democratic-csi-config
+  config:
+    driver: zfs-generic-iscsi
+
+node:
+  hostPID: true
+  driver:
+    extraEnv:
+      - name: ISCSIADM_HOST_STRATEGY
+        value: nsenter
+      - name: ISCSIADM_HOST_PATH
+        value: /usr/local/sbin/iscsiadm
+    iscsiDirHostPath: /usr/local/etc/iscsi
+    iscsiDirHostPathType: ""
+
+storageClasses:
+  - name: iscsi
+    # Use this storage class when PVC does not specify storage class
+    defaultClass: true
+    allowVolumeExpansion: true
+    volumeBindingMode: Immediate
+    reclaimPolicy: Delete
+    parameters:
+      # No nested CoW
+      fsType: ext4
+
+# No volume snapshots
+volumeSnapshotClasses: []

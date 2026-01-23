@@ -43,6 +43,12 @@ if systemctl is-active --quiet pve-ha-lrm; then
 	systemctl disable -q --now corosync
 fi
 
+# Create ZFS dataset for Democratic CSI
+
+ZPOOL=$(zpool list -H -o name | head -n 1)
+zfs create "${ZPOOL}/k8s-storage"
+apt update && apt install -y targetcli-fb
+
 # Done
 echo 'Completed post install. Rebooting...'
 reboot
