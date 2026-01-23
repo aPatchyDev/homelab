@@ -118,3 +118,48 @@ Democratic CSI was chosen for the following reasons:
 
 Choosing a storage backend that lives outside kubernetes creates a dependency on managing kubernetes secrets.  
 Refer to [../README.md#secrets](../README.md#secrets)
+
+#### Configuring Democratic CSI
+
+Democratic CSI only provides a helm chart.
+- Receives connection credentials as input
+- Helm cannot inject references to kubernetes secret
+	- Requires the application chart to cooperate
+	- Argo CD refuses to support injecting secrets into helm charts
+		- https://github.com/argoproj/argo-cd/issues/1786
+		- https://github.com/argoproj/argo-cd/issues/4041
+		- https://github.com/argoproj/argo-cd/issues/5202
+		- https://github.com/argoproj/argo-cd/issues/12060
+- Democratic CSI documentation does not state whether it supports referencing kubernetes secrets
+	- Eventually found the [official chart repo's example](https://github.com/democratic-csi/charts/blob/master/stable/democratic-csi/values.yaml) which shows it can reference existing kubernetes config
+
+Democratic CSI shows the following [special configuration required for Talos nodes](https://github.com/democratic-csi/democratic-csi?tab=readme-ov-file#talos) (at the time of writing)
+```yaml
+node:
+  hostPID: true
+  driver:
+    extraEnv:
+      - name: ISCSIADM_HOST_STRATEGY
+        value: nsenter
+      - name: ISCSIADM_HOST_PATH
+        value: /usr/local/sbin/iscsiadm
+    iscsiDirHostPath: /usr/local/etc/iscsi  # <--- This is outdated and must be set to `/var/iscsi`
+    iscsiDirHostPathType: ""
+```
+
+`node.driver.iscsiDirHostPath` must be updated to match [changes in Talos](https://github.com/siderolabs/extensions/issues/688) but the instructions have not been updated for more than 2 months despite the [relevant issue](https://github.com/democratic-csi/democratic-csi/issues/461) being closed
+
+`csiDriver.name` must also be a valid lowercase RFC 1123 subdomain, which neither the comments in the example config nor the linked references mention.
+- After deploying, Argo CD shows the reason in its error log
+
+Although some reference links for configuring ZFS iSCSI on linux has been provided, it would have been nice if the minimum requirements were written explicitly.
+```bash
+# Name should be 17 chars or less
+zfs create "$ZPOOL/$DATASET"
+apt install -y targetcli-fb
+targetcli <<EOF
+cd /iscsi
+create $IQN_BASENAME
+exit
+EOF
+```
