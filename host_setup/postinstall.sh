@@ -49,6 +49,13 @@ ZPOOL=$(zpool list -H -o name | head -n 1)
 zfs create "${ZPOOL}/k8s-storage"
 apt update && apt install -y targetcli-fb
 
+IQN='iqn.2025-01.local.zfs'
+targetcli <<EOF
+cd /iscsi
+create $IQN
+exit
+EOF
+
 # Done
 echo 'Completed post install. Rebooting...'
 reboot
