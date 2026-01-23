@@ -1,5 +1,5 @@
 csiDriver:
-  name: "ZFS-iSCSI"
+  name: "zfs-iscsi"
 
 driver:
   existingConfigSecret: democratic-csi-config
