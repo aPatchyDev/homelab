@@ -53,6 +53,11 @@ IQN='iqn.2025-01.local.zfs'
 targetcli <<EOF
 cd /iscsi
 create $IQN
+cd /iscsi/$IQN/tpg1
+set attribute authentication=0
+set attribute generate_node_acls=1
+set attribute cache_dynamic_acls=1
+set attribute demo_mode_write_protect=0
 exit
 EOF
 

@@ -152,7 +152,8 @@ node:
 `csiDriver.name` must also be a valid lowercase RFC 1123 subdomain, which neither the comments in the example config nor the linked references mention.
 - After deploying, Argo CD shows the reason in its error log
 
-Although some reference links for configuring ZFS iSCSI on linux has been provided, it would have been nice if the minimum requirements were written explicitly.
+Although some reference links for configuring ZFS iSCSI on linux has been provided, it would have been nice if the minimum requirements were written explicitly.  
+In addition, iSCSI tpg attributes must be set manually since configuration defined in kubernetes do not apply retroactively to existing resources.
 ```bash
 # Name should be 17 chars or less
 zfs create "$ZPOOL/$DATASET"
