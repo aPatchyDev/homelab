@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard-headless
+spec:
+  clusterIP: None
+  selector:
+    app: adguard
+  ports:
+    # --- Web Interface ---
+    - name: http
+      port: 80
+    # --- Plain DNS ---
+    - name: dns-tcp
+      port: 53
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+    # --- DNS-over-HTTPS ---
+    - name: https
+      port: 443
+    - name: https-udp
+      port: 443
+      protocol: UDP
+    # --- DNS-over-QUIC ---
+    - name: quic
+      port: 784
+      protocol: UDP
+    # --- DNS-over-TLS ---
+    - name: tls
+      port: 853
+    # --- DNSCrypt
+    - name: dnscrypt
+      port: 5443
+    - name: dnscrypt-udp
+      port: 5443
+      protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adguard-svc
+  annotations:
+    metallb.io/loadBalancerIPs: 192.168.123.202
+spec:
+  selector:
+    app: adguard
+  type: LoadBalancer
+  ports:
+    # --- Web Interface ---
+    - name: http
+      port: 80
+    # --- Plain DNS ---
+    - name: dns-tcp
+      port: 53
+    - name: dns-udp
+      port: 53
+      protocol: UDP
+    # --- DNS-over-HTTPS ---
+    - name: https
+      port: 443
+    - name: https-udp
+      port: 443
+      protocol: UDP
+    # --- DNS-over-QUIC ---
+    - name: quic
+      port: 784
+      protocol: UDP
+    # --- DNS-over-TLS ---
+    - name: tls
+      port: 853
+    # --- DNSCrypt
+    - name: dnscrypt
+      port: 5443
+    - name: dnscrypt-udp
+      port: 5443
+      protocol: UDP

@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: adguard
+spec:
+  serviceName: adguard-headless
+  selector:
+    matchLabels:
+      app: adguard
+  template:
+    metadata:
+      labels:
+        app: adguard
+    spec:
+      containers:
+        - name: adguard-home
+          image: adguard/adguardhome:v0.107.71
+          # Override initialization web server port to align with web panel
+          command: ["/opt/adguardhome/AdGuardHome"]
+          args:
+            - --no-check-update
+            - -c
+            - /opt/adguardhome/conf/AdGuardHome.yaml
+            - -w
+            - /opt/adguardhome/work
+            - --web-addr
+            - 0.0.0.0:80
+          # Workaround until better probe is viable
+          # https://github.com/AdguardTeam/AdGuardHome/issues/1979
+          # When initialization port is aligned with operation port, the same endpoints seem to be reachable
+          livenessProbe:
+            tcpSocket:
+              port: 80
+          ports:
+            # --- Web Interface ---
+            - name: http
+              containerPort: 80
+            # --- Plain DNS ---
+            - name: dns-tcp
+              containerPort: 53
+            - name: dns-udp
+              containerPort: 53
+              protocol: UDP
+            # --- DNS-over-HTTPS ---
+            - name: https
+              containerPort: 443
+            - name: https-udp
+              containerPort: 443
+              protocol: UDP
+            # --- DNS-over-QUIC ---
+            - name: quic
+              containerPort: 784
+              protocol: UDP
+            # --- DNS-over-TLS ---
+            - name: tls
+              containerPort: 853
+            # --- DNSCrypt ---
+            - name: dnscrypt
+              containerPort: 5443
+            - name: dnscrypt-udp
+              containerPort: 5443
+              protocol: UDP
+          volumeMounts:
+            - name: adguard-data
+              mountPath: /opt/adguardhome/work
+            - name: adguard-config
+              mountPath: /opt/adguardhome/conf
+  volumeClaimTemplates:
+    - metadata:
+        name: adguard-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
+    - metadata:
+        name: adguard-config
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
