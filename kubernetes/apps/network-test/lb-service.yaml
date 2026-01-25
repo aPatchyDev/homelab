@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: lb-test
   annotations:
-    metallb.io/loadBalancerIPs: 192.168.123.250
+#    metallb.io/loadBalancerIPs: 192.168.123.250
+    external-dns.alpha.kubernetes.io/hostname: test.home.arpa
 spec:
   type: LoadBalancer
   selector:

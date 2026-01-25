@@ -3,9 +3,6 @@ kind: IPAddressPool
 metadata:
   name: lan-pool
 spec:
-  # Have services explicitly request IP to prevent address changing
-  # Disable auto-assign to fail fast on mistakes
-  autoAssign: false
   addresses:
     - 192.168.123.201-192.168.123.250
 ---
