@@ -3,6 +3,6 @@ kind: Service
 metadata:
   name: argocd-server
   annotations:
-    metallb.io/loadBalancerIPs: 192.168.123.201
+    external-dns.alpha.kubernetes.io/hostname: argo.home.arpa
 spec:
   type: LoadBalancer

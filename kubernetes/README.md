@@ -87,6 +87,15 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 	- Consider [Cilium](https://cilium.io/)
 		- Can handle L4 + L7 load balancing
 
+### Current status
+
+- Static IP allocation via `metallb.io/loadBalancerIPs` annotation
+	- DNS server backed by Adguard Home
+- Domain name reservation via `external-dns.alpha.kubernetes.io/hostname` annotation
+	- Using `.home.arpa` TLD as recommended by RFC 8375
+	- L4 external endpoints
+	- Currently also used for L7 until Gateway API is ready
+
 ## Storage & Secrets
 
 Configuring networking to work with domain names require a DNS server with stateful persistent storage.  
