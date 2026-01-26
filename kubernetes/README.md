@@ -96,6 +96,34 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 	- L4 external endpoints
 	- Currently also used for L7 until Gateway API is ready
 
+### Temporary DNS server local override
+
+Best solution would be to set upstream router's DNS server to point to the DNS server deployed in the cluster.
+- Multiple DNS servers are treated equally without preference nor priority
+	- Unless explicitly configured for split DNS
+- Upstream router must be configured to only use internal DNS server
+	- DNS resolution fails if internal DNS is offline
+	- Not safe during testing
+
+Until homelab stabilizes, manual local override is sufficient.
+
+```bash
+# For systemd-based system
+# Tested on Fedora 43
+# Reference: https://man7.org/linux/man-pages/man5/systemd.dns-delegate.5.html
+sudo -i
+
+mkdir -p /etc/systemd/dns-delegate.d
+
+cat <<EOF > /etc/systemd/dns-delegate.d/home-arpa.dns-delegate
+[Delegate]
+DNS=<IP of DNS server>
+Domains=~home.arpa
+EOF
+
+systemctl reload systemd-resolved
+```
+
 ## Storage & Secrets
 
 Configuring networking to work with domain names require a DNS server with stateful persistent storage.  
