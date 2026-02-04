@@ -61,6 +61,11 @@ set attribute demo_mode_write_protect=0
 exit
 EOF
 
+# Set up Prometheus Exporter
+
+apt install -y prometheus-node-exporter
+sed -i 's/ARGS=.*/ARGS="--collector.disable-defaults --collector.zfs --collector.hwmon"/' /etc/default/prometheus-node-exporter
+
 # Done
 echo 'Completed post install. Rebooting...'
 reboot
