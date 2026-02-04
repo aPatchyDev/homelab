@@ -20,6 +20,15 @@ spec:
           ports:
             - name: prometheus
               containerPort: 9090
+          # https://prometheus.io/docs/prometheus/latest/management_api/
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: 9090
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
           volumeMounts:
             - name: prometheus-data
               mountPath: /prometheus
