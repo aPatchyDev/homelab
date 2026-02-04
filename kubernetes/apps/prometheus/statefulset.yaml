@@ -12,6 +12,8 @@ spec:
       labels:
         app: prometheus
     spec:
+      securityContext:
+        fsGroup: 65534 # USER nobody
       containers:
         - name: prometheus
           image: prom/prometheus:v3.9.1
