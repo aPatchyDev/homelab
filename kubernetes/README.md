@@ -202,6 +202,114 @@ exit
 EOF
 ```
 
+##### Stable ZVol naming
+
+The `driver.iscsi.nameTemplate` option only applies within iSCSI (`targetcli ls /backstores/block`) and not the actual ZVol created (`zfs list -t volume`).  
+By default, the CSI uses the `name` attribute set by Kubernetes.  
+This happens to be the name of the persistent volume, which has the format `pvc-{uuid}`
+
+PV names are not stable, so if the entire kubernetes cluster is recreated, it would fail to reattach to the existing ZVol.  
+This is disadvantagous for restoring from backup since the PV would always create a new volume and restoring on a busy device may lead to data corruption. It also tightly couples the storage state with kubernetes state, making it harder to rebuild the kubernetes cluster from the repository.
+
+Thus begins the hunt for predictable ZVol naming.
+
+The `targetcli` command used to provision new ZVols is in `src/driver/controller-zfs-generic/index.js` [here](https://github.com/democratic-csi/democratic-csi/blob/3974268272a84e9c22c47cae2fca847a8d422bad/src/driver/controller-zfs-generic/index.js#L108-L306)
+
+```sh
+# create target
+cd /iscsi
+create ${basename}:${assetName}
+# ...
+# create extent
+cd /backstores/block
+create ${assetName} /dev/${extentDiskName}
+# ...
+# add extent to target/tpg
+cd /iscsi/${basename}:${assetName}/tpg1/luns
+create /backstores/block/${assetName}
+```
+
+There are 3 `create` commands, which depend on `basename, assetName, extentDiskName`. The relevant snippets are shown below.
+
+```js
+async createShare(call, datasetName) {
+	// ...
+
+	case "zfs-generic-iscsi": {
+		let basename;
+		let assetName;
+
+		if (this.options.iscsi.nameTemplate) {
+			assetName = Handlebars.compile(this.options.iscsi.nameTemplate)({
+			name: call.request.name,
+			parameters: call.request.parameters,
+			});
+		}
+
+		// ...
+
+		let extentDiskName = "zvol/" + datasetName;
+
+		switch (this.options.iscsi.shareStrategy) {
+			case "targetCli":
+				basename = this.options.iscsi.shareStrategyTargetCli.basename;
+```
+
+Since `iscsi.nameTemplate` only showed an effect within targetcli, `extentDiskName` must be the ZVol name, which is passed in as an argument.
+
+Searching for the call site reveals `src/driver/controller-zfs/index.js` [here](https://github.com/democratic-csi/democratic-csi/blob/3974268272a84e9c22c47cae2fca847a8d422bad/src/driver/controller-zfs/index.js#L639-L1295) with the relevant snippets below.
+
+```js
+async CreateVolume(call) {
+	const driver = this;
+	// ...
+	let datasetParentName = this.getVolumeParentDatasetName();
+	// ...
+	let volume_id = await driver.getVolumeIdFromCall(call);
+	// ...
+	const datasetName = datasetParentName + "/" + volume_id;
+	// ...
+	volume_context = await this.createShare(call, datasetName);
+```
+
+It is obvious `volume_id` is the ZVol name, which is obtained from `src/driver/index.js` [here](https://github.com/democratic-csi/democratic-csi/blob/3974268272a84e9c22c47cae2fca847a8d422bad/src/driver/index.js#L448-L551)
+
+```js
+async getVolumeIdFromCall(call) {
+	const driver = this;
+	let volume_id = call.request.name;
+	// ...
+	const idTemplate = _.get(
+		driver.options,
+		"_private.csi.volume.idTemplate",
+		""
+	);
+	if (idTemplate) {
+		volume_id = Handlebars.compile(idTemplate)({
+			name: call.request.name,
+			parameters: call.request.parameters,
+		});
+	// ...
+	const hash_strategy = _.get(
+		driver.options,
+		"_private.csi.volume.idHash.strategy",
+		""
+	);
+	// ...
+```
+
+The snippet above reveals 2 undocumented driver config options:
+- `_private.csi.volume.idTemplate`
+- `_private.csi.volume.idHash.strategy`
+
+In order to create a valid template, it is necessary to know what parameters are available.  
+The [CSI docs](https://kubernetes-csi.github.io/docs/external-provisioner.html#persistentvolumeclaim-and-persistentvolume-parameters) list the following parameters:
+- csi.storage.k8s.io/pvc/name
+	- PVC in Statefulset name format: {volumeClaimTemplates name}-{StatefulSet name}-{ordinal}
+- csi.storage.k8s.io/pvc/namespace
+- csi.storage.k8s.io/pv/name
+
+
 #### Monitoring
 
 Proxmox can push metrics to an external server, although [documentation on what data is included is lacking](pve.proxmox.com/wiki/External_Metric_Server).  
