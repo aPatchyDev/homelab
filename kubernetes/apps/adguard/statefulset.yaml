@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: adguard
+  name: app
 spec:
-  serviceName: adguard-headless
+  serviceName: headless
   selector:
     matchLabels:
       app: adguard
@@ -61,20 +61,20 @@ spec:
               containerPort: 5443
               protocol: UDP
           volumeMounts:
-            - name: adguard-data
+            - name: data
               mountPath: /opt/adguardhome/work
-            - name: adguard-config
+            - name: config
               mountPath: /opt/adguardhome/conf
   volumeClaimTemplates:
     - metadata:
-        name: adguard-data
+        name: data
       spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
             storage: 5Gi
     - metadata:
-        name: adguard-config
+        name: config
       spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:

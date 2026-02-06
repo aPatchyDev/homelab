@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: prometheus
+  name: app
 spec:
-  serviceName: prometheus-headless
+  serviceName: headless
   selector:
     matchLabels:
       app: prometheus
@@ -30,17 +30,17 @@ spec:
               path: /-/ready
               port: 9090
           volumeMounts:
-            - name: prometheus-data
+            - name: data
               mountPath: /prometheus
-            - name: prometheus-config
+            - name: config
               mountPath: /etc/prometheus
       volumes:
-        - name: prometheus-config
+        - name: config
           configMap:
             name: app-config
   volumeClaimTemplates:
     - metadata:
-        name: prometheus-data
+        name: data
       spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: adguard-headless
+  name: headless
 spec:
   clusterIP: None
   selector:
@@ -39,7 +39,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: adguard-svc
+  name: svc
   annotations:
     metallb.io/loadBalancerIPs: 192.168.123.202
     external-dns.alpha.kubernetes.io/hostname: adguard.home.arpa

@@ -21,7 +21,7 @@ provider:
     env:
       - name: ADGUARD_URL
         # Internal DNS: <pod name>.<service name>.<namespace>.svc
-        value: http://adguard-0.adguard-headless.adguard.svc
+        value: http://app-0.headless.adguard.svc
       - name: ADGUARD_USER
         valueFrom:
           secretKeyRef:

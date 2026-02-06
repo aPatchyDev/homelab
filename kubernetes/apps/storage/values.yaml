@@ -2,7 +2,7 @@ csiDriver:
   name: "zfs-iscsi"
 
 driver:
-  existingConfigSecret: democratic-csi-config
+  existingConfigSecret: config
   config:
     driver: zfs-generic-iscsi
 
