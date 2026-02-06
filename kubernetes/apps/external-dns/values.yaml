@@ -20,8 +20,8 @@ provider:
       timeoutSeconds: 5
     env:
       - name: ADGUARD_URL
-        # Internal DNS: <pod name>.<service name>.<namespace>.svc
-        value: http://app-0.headless.adguard.svc
+        # Internal DNS: <service name>.<namespace>.svc.cluster.local
+        value: http://headless.adguard.svc.cluster.local
       - name: ADGUARD_USER
         valueFrom:
           secretKeyRef:
