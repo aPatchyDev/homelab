@@ -4,7 +4,7 @@ resources:
   # CRD from helm chart is not installed automatically
   # https://github.com/argoproj/argo-cd/issues/3784
   - github.com/traefik/traefik-helm-chart/traefik/crds?ref=v39.0.0
-  - credentials.yaml
+  - dashboard.yaml
 helmCharts:
   - name: traefik
     repo: https://traefik.github.io/charts

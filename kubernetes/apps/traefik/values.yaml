@@ -18,27 +18,7 @@ ports:
 
 api:
   dashboard: true
-  insecure: false
-
-ingressRoute:
-  dashboard:
-    enabled: true
-    matchRule: Host(`traefik.home.arpa`)
-    entryPoints:
-      - web
-      # - websecure
-    middlewares:
-      - name: dashboard-auth
-
-# Creates a BasicAuth Middleware for the Dashboard Security
-extraObjects:
-  - apiVersion: traefik.io/v1alpha1
-    kind: Middleware
-    metadata:
-      name: dashboard-auth
-    spec:
-      basicAuth:
-        secret: dashboard-secret
+  insecure: true
 
 # We will route with Gateway API instead.
 ingressClass:
