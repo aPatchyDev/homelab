@@ -1,3 +1,6 @@
+sources:
+  - service
+  - gateway-httproute
 provider:
   name: webhook
   webhook:
