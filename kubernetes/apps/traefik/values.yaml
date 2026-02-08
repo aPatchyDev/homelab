@@ -16,9 +16,14 @@ ports:
   #   port: 443
   #   nodePort: 30001
 
+  # API & Dashboard
+  traefik:
+    port: 8080
+    expose:
+      default: false # Access only via HTTPRoute
+
 api:
   dashboard: true
-  insecure: true
 
 # We will route with Gateway API instead.
 ingressClass:
