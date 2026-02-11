@@ -6,6 +6,10 @@ spec:
   gatewayClassName: istio
   # # defaultScope requires Experimental channel
   # defaultScope: All
+  # # For future L4 routing when gateway service must be reachable
+  infrastructure:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: gateway.home.arpa
   listeners:
   - name: http
     protocol: HTTP

@@ -90,11 +90,14 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 ### Current status
 
 - Static IP allocation via `metallb.io/loadBalancerIPs` annotation
-	- DNS server backed by Adguard Home
+	- For network infrastructure only
+		- DNS server backed by Adguard Home
 - Domain name reservation via `external-dns.alpha.kubernetes.io/hostname` annotation
 	- Using `.home.arpa` TLD as recommended by RFC 8375
 	- L4 external endpoints
-	- Currently also used for L7 until Gateway API is ready
+- L7 Gateway API via HTTPRoute
+	- Using `.home.arpa` TLD as recommended by RFC 8375
+	- Using Kubernetes Gateway API (stable channel) only to remain vendor-agnostic
 
 ### Temporary DNS server local override
 
@@ -123,6 +126,55 @@ EOF
 
 systemctl reload systemd-resolved
 ```
+
+### Gateway API
+
+Benefit of Gateway API
+- Reduce IP address consumption for web services
+	- Important for homelab where subnet may be shared with other physical devices
+- Control network exposure of application containers
+
+Gateway API v1 currently makes 2+3 route types available
+- Stable channel
+	- HTTP
+	- GRPC
+- Experimental channel
+	- TCP
+	- UDP
+	- TLS
+
+#### Plans for future
+
+L4 routing is experimental and is not used in this setup. However, if it becomes stable, it would be a better alternative to IP allocation.
+
+TCP / UDP has no discriminators like L7 hostname fields, so they must listen on distinct ports.
+- IP in typical /24 subnet: 254 addresses are available
+	- Exclude gateway + broadcast address
+- L4 in typical system: 64,512 ports are available
+	- Exclude ports reserved for system services
+
+If exposing L4 service is required, `<gateway address>:<port>` offers more addressable range than a unique IP per service. For this reason, having a stable gateway address is beneficial
+- `spec.addresses` [(doc](https://gateway-api.sigs.k8s.io/reference/spec/#gatewayspecaddress)) does not seem to be supported by [external-dns](https://kubernetes-sigs.github.io/external-dns/latest/docs/sources/gateway-api/) yet
+- `spec.infrastructure.annotations` ([doc](https://gateway-api.sigs.k8s.io/reference/spec/#gatewayinfrastructure)) instead applies the external-dns annotation to the generated loadbalancer service
+	- This also applies the annotation to the pod so external-dns must be configured to ignore pod annotations
+		- This is the default behavior
+
+#### Implementation choice
+
+Initial choice was [Traefik](https://doc.traefik.io/traefik/setup/kubernetes/) as it seems to be the popular choice in homelabs.
+- Configuring it was a hassle and having some features behind a paywall didn't seem worth the trouble
+- [Benchmark](https://github.com/howardjohn/gateway-api-bench) shows concerning results
+
+Based on the benchmark above, I switched to [Istio](https://istio.io/latest/docs/ambient/)
+- Initial setup was easier, but partially missing documentation
+	- Privileged namespace requirement and deployment recommendation is unclear
+		- [Docs suggest only for GKE platform](https://istio.io/latest/docs/ambient/install/platform-prerequisites/#google-kubernetes-engine-gke)
+		- [Github Chart suggest only for cni but not ztunnel](https://github.com/istio/istio/tree/master/manifests/charts/istio-cni#installing-the-chart)
+	- No documentation that states the `istiod` config required when deploying privileged components to another namespace
+		- `trustedZtunnelNamespace` must be set otherwise pods fail to become ready
+- Default config uses a lot of memory
+	- Initial deployment failed on some VM nodes due to insufficient RAM
+		- Resolved by reducing memory requirements via config
 
 ## Storage & Secrets
 
