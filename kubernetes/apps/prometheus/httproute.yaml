@@ -1,0 +1,24 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: route-test
+spec:
+  parentRefs:
+  - name: gateway
+    namespace: istio-system
+  hostnames:
+    - lab.home.arpa
+  rules:
+    - matches:
+      - path:
+          type: PathPrefix
+          value: /metrics
+      filters:
+        - type: URLRewrite
+          urlRewrite:
+            path:
+              type: ReplacePrefixMatch
+              replacePrefixMatch: /
+      backendRefs:
+        - name: headless
+          port: 9090
