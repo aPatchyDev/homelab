@@ -6,7 +6,7 @@ spec:
   gatewayClassName: istio
   # # defaultScope requires Experimental channel
   # defaultScope: All
-  # # For future L4 routing when gateway service must be reachable
+  # For future L4 routing when gateway service must be reachable
   infrastructure:
     annotations:
       external-dns.alpha.kubernetes.io/hostname: gateway.home.arpa
@@ -16,7 +16,7 @@ spec:
     port: 80
     allowedRoutes:
       namespaces:
-        from: All
+        from: Same # Only allow https-redirect route to attach
   - name: https
     protocol: HTTPS
     port: 443

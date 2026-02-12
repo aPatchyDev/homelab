@@ -5,6 +5,7 @@ resources:
   - cert-issuer.yaml
   - cert.yaml
   - gateway.yaml
+  - https-redirect.yaml
 helmCharts:
   - name: base
     repo: https://istio-release.storage.googleapis.com/charts
