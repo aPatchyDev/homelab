@@ -36,3 +36,12 @@ helmCharts:
       resources:
           requests:
             memory: 1Mi
+  - name: cert-manager
+    repo: oci://quay.io/jetstack/charts
+    version: 1.19.2
+    namespace: istio-system
+    valuesInline:
+      crds:
+        enabled: true
+      config:
+        enableGatewayAPI: true
