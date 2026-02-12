@@ -88,7 +88,7 @@ Since none of the options integrate well with the existing setup, there was no r
 
 #### Self hosted secret manager
 
-Requires stateful storage, creating a circular dependency
+Requires stateful storage, which requires connection credentials, creating a circular dependency
 
 #### Cloud based secret manager
 

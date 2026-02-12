@@ -10,14 +10,14 @@ Applications deployed using [Argo CD](https://argo-cd.readthedocs.io/en/stable/)
 ```
 ./
 ├── bootstrap  <─────────────────┐
-│   └── *.yaml                   │
+│   └── *.yaml                   │
 └── apps                         │
     ├── root  <─────────┐        │
     │   ├── root.yaml ──┘        │
     │   ├── argo-cd.yaml ──┐     │
     │   └── <others>.yaml ━┿━━┓  │
-    ├── argo-cd  <─────────┘  ┃  │
-    │   └── *.yaml ───────────╂──┘
+    ├── argo-cd  <─────────┘  ┃  │
+    │   └── *.yaml ───────────╂──┘
     └── <others>  <━━━━━━━━━━━┛
         └── *.yaml
 ```
@@ -56,332 +56,32 @@ Assumption: A fresh kubernetes cluster provisioned by [OpenTofu IaC](../host_dep
 - Define application under its directory
 - Register application under `./apps/root`
 
-## Networking
+## Rationales
 
-### Goals
+### Networking
 
-- Every service should be reachable with a constant entry point
-	- Either IP / Subdomain + Path
-- Each service should be independently configurable
-	- Ideally, configuring one service should not require knowledge of how other services are configured
-	- Address assignment should be automatic without conflict
+Refer to [networking.md](./networking.md) for detail.
 
-### Strategy
+### Storage
 
-- L4 services
-	- IP address allocated by load balancer
-		- Use [MetalLB](https://metallb.io/)
-	- DNS records for services updated to point to its allocated IP address
-		- Use [ExternalDNS](https://kubernetes-sigs.github.io/external-dns/latest/) to issue DNS record updates
-		- Deploy a DNS server as a service
-			- [Pi-hole](https://pi-hole.net/)
-				- Wildcard domains not supported OOTB
-			- [Adguard Home](https://adguard.com/en/adguard-home/overview.html)
-			- [Technitium](https://technitium.com/)
-	- For shared resources
-		- eg: Persistence
-- L7 services
-	- Subdomain / Path based routing
-		- [Kubernetes Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/)
-- Future plans
-	- Consider [Cilium](https://cilium.io/)
-		- Can handle L4 + L7 load balancing
+Configuring networking to work with domain names require a DNS server with stateful persistent storage to store the mappings.
 
-### Current status
+Since the DNS server is deployed via kubernetes, it should be deployable to any of the worker nodes, in which case, using local storage of each kubernetes node (VM) is not desirable.
+- Couples the service with a particular node
+- Or introduce hurdles when migrating to another node
 
-- Static IP allocation via `metallb.io/loadBalancerIPs` annotation
-	- For network infrastructure only
-		- DNS server backed by Adguard Home
-- Domain name reservation via `external-dns.alpha.kubernetes.io/hostname` annotation
-	- Using `.home.arpa` TLD as recommended by RFC 8375
-	- L4 external endpoints
-- L7 Gateway API via HTTPRoute
-	- Using `.home.arpa` TLD as recommended by RFC 8375
-	- Using Kubernetes Gateway API (stable channel) only to remain vendor-agnostic
+Thus arises the need for network storage decoupled from any individual node
+- Remote storage server
+- Or storage cluster
 
-### Temporary DNS server local override
+Refer to [storage.md](./storage.md) for detail.
 
-Best solution would be to set upstream router's DNS server to point to the DNS server deployed in the cluster.
-- Multiple DNS servers are treated equally without preference nor priority
-	- Unless explicitly configured for split DNS
-- Upstream router must be configured to only use internal DNS server
-	- DNS resolution fails if internal DNS is offline
-	- Not safe during testing
+### Secrets
 
-Until homelab stabilizes, manual local override is sufficient.
+Choosing a remote storage backend that lives outside kubernetes creates a dependency on managing connection credentials as secrets.
 
-```bash
-# For systemd-based system
-# Tested on Fedora 43
-# Reference: https://man7.org/linux/man-pages/man5/systemd.dns-delegate.5.html
-sudo -i
+Refer to [../README.md#secrets](../README.md#secrets) for detail.
 
-mkdir -p /etc/systemd/dns-delegate.d
+### Monitoring
 
-cat <<EOF > /etc/systemd/dns-delegate.d/home-arpa.dns-delegate
-[Delegate]
-DNS=<IP of DNS server>
-Domains=~home.arpa
-EOF
-
-systemctl reload systemd-resolved
-```
-
-### Gateway API
-
-Benefit of Gateway API
-- Reduce IP address consumption for web services
-	- Important for homelab where subnet may be shared with other physical devices
-- Control network exposure of application containers
-
-Gateway API v1 currently makes 2+3 route types available
-- Stable channel
-	- HTTP
-	- GRPC
-- Experimental channel
-	- TCP
-	- UDP
-	- TLS
-
-#### Plans for future
-
-L4 routing is experimental and is not used in this setup. However, if it becomes stable, it would be a better alternative to IP allocation.
-
-TCP / UDP has no discriminators like L7 hostname fields, so they must listen on distinct ports.
-- IP in typical /24 subnet: 254 addresses are available
-	- Exclude gateway + broadcast address
-- L4 in typical system: 64,512 ports are available
-	- Exclude ports reserved for system services
-
-If exposing L4 service is required, `<gateway address>:<port>` offers more addressable range than a unique IP per service. For this reason, having a stable gateway address is beneficial
-- `spec.addresses` [(doc](https://gateway-api.sigs.k8s.io/reference/spec/#gatewayspecaddress)) does not seem to be supported by [external-dns](https://kubernetes-sigs.github.io/external-dns/latest/docs/sources/gateway-api/) yet
-- `spec.infrastructure.annotations` ([doc](https://gateway-api.sigs.k8s.io/reference/spec/#gatewayinfrastructure)) instead applies the external-dns annotation to the generated loadbalancer service
-	- This also applies the annotation to the pod so external-dns must be configured to ignore pod annotations
-		- This is the default behavior
-
-#### Implementation choice
-
-Initial choice was [Traefik](https://doc.traefik.io/traefik/setup/kubernetes/) as it seems to be the popular choice in homelabs.
-- Configuring it was a hassle and having some features behind a paywall didn't seem worth the trouble
-- [Benchmark](https://github.com/howardjohn/gateway-api-bench) shows concerning results
-
-Based on the benchmark above, I switched to [Istio](https://istio.io/latest/docs/ambient/)
-- Initial setup was easier, but partially missing documentation
-	- Privileged namespace requirement and deployment recommendation is unclear
-		- [Docs suggest only for GKE platform](https://istio.io/latest/docs/ambient/install/platform-prerequisites/#google-kubernetes-engine-gke)
-		- [Github Chart suggest only for cni but not ztunnel](https://github.com/istio/istio/tree/master/manifests/charts/istio-cni#installing-the-chart)
-	- No documentation that states the `istiod` config required when deploying privileged components to another namespace
-		- `trustedZtunnelNamespace` must be set otherwise pods fail to become ready
-- Default config uses a lot of memory
-	- Initial deployment failed on some VM nodes due to insufficient RAM
-		- Resolved by reducing memory requirements via config
-
-## Storage & Secrets
-
-Configuring networking to work with domain names require a DNS server with stateful persistent storage.  
-Since a service can be deployed to any of the worker nodes, using local storage of each kubernetes node (VM) is not desirable.  
-A better solution is to utilize the storage available in the hypervisor host.
-
-### Storage options
-
-- NFS server + [NFS provisioner](https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner)
-	- Slow IO
-- [Proxmox CSI plugin](https://github.com/sergelogvinov/proxmox-csi-plugin)
-	- Require clustering proxmox nodes
-	- Require correct labeling of kubernetes
-		- Excessive coupling of hypervisor and kubernetes configuration
-	- Require VM `SCSI Controller` set to `VirtIO SCSI | VirtIO SCSI Single`
-	- Require Proxmox API token
-- ZFS + [Democratic CSI](https://github.com/democratic-csi/democratic-csi) using iSCSI
-	- Require root SSH connection
-		- Can also use user with passwordless sudo for ZFS related commands
-- [Ceph](https://ceph.io/en/) / [Longhorn](https://longhorn.io/) / [OpenEBS](https://openebs.io/)
-	- Operates on distributed storage arrays with replication
-		- Great for resilliency if physically distinct storage
-		- IO amplification if virtualized on same physical disk
-	- CPU / memory overhead
-
-Democratic CSI was chosen for the following reasons:
-- Decouple hypervisor and kubernetes
-- Minimal overhead for single disk host
-
-Choosing a storage backend that lives outside kubernetes creates a dependency on managing kubernetes secrets.  
-Refer to [../README.md#secrets](../README.md#secrets)
-
-#### Configuring Democratic CSI
-
-Democratic CSI only provides a helm chart.
-- Receives connection credentials as input
-- Helm cannot inject references to kubernetes secret
-	- Requires the application chart to cooperate
-	- Argo CD refuses to support injecting secrets into helm charts
-		- https://github.com/argoproj/argo-cd/issues/1786
-		- https://github.com/argoproj/argo-cd/issues/4041
-		- https://github.com/argoproj/argo-cd/issues/5202
-		- https://github.com/argoproj/argo-cd/issues/12060
-- Democratic CSI documentation does not state whether it supports referencing kubernetes secrets
-	- Eventually found the [official chart repo's example](https://github.com/democratic-csi/charts/blob/master/stable/democratic-csi/values.yaml) which shows it can reference existing kubernetes config
-
-Democratic CSI shows the following [special configuration required for Talos nodes](https://github.com/democratic-csi/democratic-csi?tab=readme-ov-file#talos) (at the time of writing)
-```yaml
-node:
-  hostPID: true
-  driver:
-    extraEnv:
-      - name: ISCSIADM_HOST_STRATEGY
-        value: nsenter
-      - name: ISCSIADM_HOST_PATH
-        value: /usr/local/sbin/iscsiadm
-    iscsiDirHostPath: /usr/local/etc/iscsi  # <--- This is outdated and must be set to `/var/iscsi`
-    iscsiDirHostPathType: ""
-```
-
-`node.driver.iscsiDirHostPath` must be updated to match [changes in Talos](https://github.com/siderolabs/extensions/issues/688) but the instructions have not been updated for more than 2 months despite the [relevant issue](https://github.com/democratic-csi/democratic-csi/issues/461) being closed
-
-`csiDriver.name` must also be a valid lowercase RFC 1123 subdomain, which neither the comments in the example config nor the linked references mention.
-- After deploying, Argo CD shows the reason in its error log
-
-Although some reference links for configuring ZFS iSCSI on linux has been provided, it would have been nice if the minimum requirements were written explicitly.  
-In addition, iSCSI tpg attributes must be set manually since configuration defined in kubernetes do not apply retroactively to existing resources.
-```bash
-# Name should be 17 chars or less
-zfs create "$ZPOOL/$DATASET"
-apt install -y targetcli-fb
-targetcli <<EOF
-cd /iscsi
-create $IQN_BASENAME
-exit
-EOF
-```
-
-##### Stable ZVol naming
-
-The `driver.iscsi.nameTemplate` option only applies within iSCSI (`targetcli ls /backstores/block`) and not the actual ZVol created (`zfs list -t volume`).  
-By default, the CSI uses the `name` attribute set by Kubernetes.  
-This happens to be the name of the persistent volume, which has the format `pvc-{uuid}`
-
-PV names are not stable, so if the entire kubernetes cluster is recreated, it would fail to reattach to the existing ZVol.  
-This is disadvantagous for restoring from backup since the PV would always create a new volume and restoring on a busy device may lead to data corruption. It also tightly couples the storage state with kubernetes state, making it harder to rebuild the kubernetes cluster from the repository.
-
-Thus begins the hunt for predictable ZVol naming.
-
-The `targetcli` command used to provision new ZVols is in `src/driver/controller-zfs-generic/index.js` [here](https://github.com/democratic-csi/democratic-csi/blob/3974268272a84e9c22c47cae2fca847a8d422bad/src/driver/controller-zfs-generic/index.js#L108-L306)
-
-```sh
-# create target
-cd /iscsi
-create ${basename}:${assetName}
-# ...
-# create extent
-cd /backstores/block
-create ${assetName} /dev/${extentDiskName}
-# ...
-# add extent to target/tpg
-cd /iscsi/${basename}:${assetName}/tpg1/luns
-create /backstores/block/${assetName}
-```
-
-There are 3 `create` commands, which depend on `basename, assetName, extentDiskName`. The relevant snippets are shown below.
-
-```js
-async createShare(call, datasetName) {
-	// ...
-
-	case "zfs-generic-iscsi": {
-		let basename;
-		let assetName;
-
-		if (this.options.iscsi.nameTemplate) {
-			assetName = Handlebars.compile(this.options.iscsi.nameTemplate)({
-			name: call.request.name,
-			parameters: call.request.parameters,
-			});
-		}
-
-		// ...
-
-		let extentDiskName = "zvol/" + datasetName;
-
-		switch (this.options.iscsi.shareStrategy) {
-			case "targetCli":
-				basename = this.options.iscsi.shareStrategyTargetCli.basename;
-```
-
-Since `iscsi.nameTemplate` only showed an effect within targetcli, `extentDiskName` must be the ZVol name, which is passed in as an argument.
-
-Searching for the call site reveals `src/driver/controller-zfs/index.js` [here](https://github.com/democratic-csi/democratic-csi/blob/3974268272a84e9c22c47cae2fca847a8d422bad/src/driver/controller-zfs/index.js#L639-L1295) with the relevant snippets below.
-
-```js
-async CreateVolume(call) {
-	const driver = this;
-	// ...
-	let datasetParentName = this.getVolumeParentDatasetName();
-	// ...
-	let volume_id = await driver.getVolumeIdFromCall(call);
-	// ...
-	const datasetName = datasetParentName + "/" + volume_id;
-	// ...
-	volume_context = await this.createShare(call, datasetName);
-```
-
-It is obvious `volume_id` is the ZVol name, which is obtained from `src/driver/index.js` [here](https://github.com/democratic-csi/democratic-csi/blob/3974268272a84e9c22c47cae2fca847a8d422bad/src/driver/index.js#L448-L551)
-
-```js
-async getVolumeIdFromCall(call) {
-	const driver = this;
-	let volume_id = call.request.name;
-	// ...
-	const idTemplate = _.get(
-		driver.options,
-		"_private.csi.volume.idTemplate",
-		""
-	);
-	if (idTemplate) {
-		volume_id = Handlebars.compile(idTemplate)({
-			name: call.request.name,
-			parameters: call.request.parameters,
-		});
-	// ...
-	const hash_strategy = _.get(
-		driver.options,
-		"_private.csi.volume.idHash.strategy",
-		""
-	);
-	// ...
-```
-
-The snippet above reveals 2 undocumented driver config options:
-- `_private.csi.volume.idTemplate`
-- `_private.csi.volume.idHash.strategy`
-
-In order to create a valid template, it is necessary to know what parameters are available.  
-The [CSI docs](https://kubernetes-csi.github.io/docs/external-provisioner.html#persistentvolumeclaim-and-persistentvolume-parameters) list the following parameters:
-- csi.storage.k8s.io/pvc/name
-	- PVC in Statefulset name format: {volumeClaimTemplates name}-{StatefulSet name}-{ordinal}
-- csi.storage.k8s.io/pvc/namespace
-- csi.storage.k8s.io/pv/name
-
-
-#### Monitoring
-
-Proxmox can push metrics to an external server, although [documentation on what data is included is lacking](pve.proxmox.com/wiki/External_Metric_Server).  
-Based on some existing Grafana dashboards ([1](https://grafana.com/grafana/dashboards/13307-proxmox-ve/), [2](https://grafana.com/grafana/dashboards/10048-proxmox/), [3](https://grafana.com/grafana/dashboards/24550-proxmox-ve-pve-exporter/)) the metrics for ZFS does not seem to include what I wanted to track:
-- ZFS cache hit rate
-- Disk S.M.A.R.T. status
-
-Since I intend to use Prometheus for monitoring other workloads, I opted to using prometheus exporters.  
-ZFS metrics can be obtained from the host system via [Node Exporter](https://prometheus.io/docs/guides/node-exporter/) which is available as a [debian package](https://github.com/prometheus-community/smartctl_exporter).  
-Disk S.M.A.R.T metrics can be obtained from the host system via [Smartctl Exporter](https://github.com/prometheus-community/smartctl_exporter) although this is [only packaged for Debian Sid](https://pkgs.org/download/prometheus-smartctl-exporter).
-
-#### Afterthoughts
-
-Deploying stateful apps via kubernetes sucks when the app is not designed to be clustered
-- Only 1 concurrent instance can be running
-	- Shared storage results in race condition corrupting data
-	- Separate storage is not automatically reconciled
-- Slow IO or failover
-	- NFS or distributed storage has higher IO overhead
-	- Block storage does not support ReadWriteMany
-		- Existing connection must be terminated before a new node can establish connection
-
-For homelab with centralized storage, it would be ideal to establish a node on the storage server dedicated to stateful applications only
+Refer to [monitoring.md](./monitoring.md)
