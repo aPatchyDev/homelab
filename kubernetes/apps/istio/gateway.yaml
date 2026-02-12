@@ -17,3 +17,13 @@ spec:
     allowedRoutes:
       namespaces:
         from: All
+  - name: https
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+        - name: local-tls
+    allowedRoutes:
+      namespaces:
+        from: All
