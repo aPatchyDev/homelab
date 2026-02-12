@@ -118,3 +118,18 @@ Based on the benchmark above, I switched to [Istio](https://istio.io/latest/docs
 - Default config uses a lot of memory
 	- Initial deployment failed on some VM nodes due to insufficient RAM
 		- Resolved by reducing memory requirements via config
+
+### Subdomain vs Path based routing
+
+Path based routing seemed like a good idea
+- Less DNS entries pointing to the same gateway controller
+- Common base URL seemed logical for services managed by the same provider
+
+Downsides of path based routing
+- Web pages accessing assets and API endpoints have the wrong address
+- Difficult to correct addresses at gateway level
+	- `X-Forwarded-Prefix` is non-standard and not always supported
+	- `Forwarded` header does not include path prefix option
+- Not all applications support changing the base path of its endpoints
+
+Due to practical limitations, it is best to use subdomain routing for applications for distinct applications, and only use path based routing for micro-services where applicable
