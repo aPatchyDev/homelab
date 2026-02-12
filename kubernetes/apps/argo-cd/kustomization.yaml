@@ -5,6 +5,5 @@ resources:
   - password.yaml
   - httproute.yaml
 patches:
-  - path: service-patch.yaml
   - path: user-patch.yaml
   - path: config-patch.yaml

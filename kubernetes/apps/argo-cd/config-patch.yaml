@@ -8,7 +8,10 @@ data:
   controller.diff.server.side: "true"
   # Necessary to use Gateway routing
   # https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/#prerequisites
-  server.insecure: true
+  server.insecure: "true"
+  # Necessary when web UI is under a non-root path
+  # https://argo-cd.readthedocs.io/en/stable/operator-manual/ingress/#argocd-server-and-ui-root-path-v153
+  server.rootpath: /argo
 ---
 apiVersion: v1
 kind: ConfigMap
