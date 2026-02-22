@@ -1,0 +1,10 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: hypervisor
+spec:
+  staticConfigs:
+    - labels:
+        job: Hypervisor
+      targets:
+        - 192.168.123.111:9100
