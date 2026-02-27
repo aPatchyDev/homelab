@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pod-mapping-prometheus
+spec:
+  groups:
+    - name: pod.mapping.prometheus
+      rules:
+        - record: pod_origin
+          expr: >
+            count by (pod, namespace, origin_app) (
+              label_replace(
+                kube_pod_labels{namespace="kube-system", label_app_kubernetes_io_part_of="prometheus-node-exporter"},
+                "origin_app", "prometheus", "pod", ".*"
+              )
+            )

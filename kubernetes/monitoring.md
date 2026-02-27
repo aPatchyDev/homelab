@@ -96,3 +96,59 @@ cp -ra /mnt/old/chunks_head/* /mnt/new/prometheus-db/chunks_head/
 ```
 
 While the owner permission did not match, the group permission matched and there were no issues.
+
+## Resource Usage Monitoring
+
+Knowing how much resources a particular application uses is necessary for troubleshooting resource shortage and evaluating competing apps.
+
+Intuitively, it would be sufficient to aggregate resource usage of all pods and group by the application label.  
+However in practice, this is not so simple.
+
+All applications deployed via Argo CD are annotated with a tracking ID ([ref](https://argo-cd.readthedocs.io/en/stable/user-guide/resource_tracking/)) so it should be possible to group by this ID
+- Argo CD only annotates top-level manifests with the application name
+- Helm charts don't always propagate the annotation down to the pods
+  - Helm appears to use the `app.kubernetes.io/instance` label instead
+  - Helm sets the label value to the chart release name
+    - Helm chart managed by Kustomize sets release name = `release-name` by default
+
+Kube-prometheus-stack automatically configures Kube-state-metric to aggregate resource usage to its top-level manifest entity but this is not enough because complex helm charts with sub-charts show up as distinct entities
+- Uses `app.kubernetes.io/instance` label
+
+Another solution is to sum up pod resource usage by namespace under the following assumptions:
+- Applications map 1:1 to a namespace
+  - An application deploys all pods to the same namespace
+  - No two applications deploy pods to the same namespace
+
+However, some applications deploy pods to multiple namespaces
+- Istio deploys CNI and Ztunnel in a privileged namespace (`kube-system`)
+- Prometheus node exporter is deployed in a privileged namespace (`kube-system`)
+
+### Aggregating Metrics
+
+Most applications deploy to a single namespace. The exceptions are for components that require greater privileges.
+- Node level deployments (daemonsets)
+- Infrastructure components
+  - Routing components
+  - Node monitoring components
+
+Since the exceptions are rare, the simplest solution is to integrate the extra pods on an individual basis.  
+This requires a mapping for pods in the privileged namespace to the parent application.  
+- `app.kubernetes.io/instance` label
+  - Kustomize assigns ambiguous release name to Helm charts as mentioned above
+- `app.kubernetes.io/name` label
+  - A single application may deploy several prileged components with distinct names
+    - Should still work, but require more integration effort
+- `app.kubernetes.io/part-of` label
+  - Similar to `app.kubernetes.io/name` label but is a higher grouping level
+    - Expected to have equal or less entries compared to `app.kubernetes.io/name`
+
+Integrating the exceptions can be done in a few ways:
+- Define a prometheus rule for a new metric that aggregates the resource usage
+  - Exception handling is built into a complex query
+  - Exception handling logic is duplicated for each resource type
+  - Data manipulation logic is put into a DB
+- Define a prometheus rule for tagging pods with the corresponding application name
+  - For pods in a namespace managed by an Argo CD app: target pods using namespace and apply Argo CD app name
+  - For pods in `kube-system` managed by an Argo CD app: target pods using label filter and apply Argo CD app name
+
+Assuming no Argo CD app takes control of `kube-system` namespace, the same tag can be used for base case and edge case.

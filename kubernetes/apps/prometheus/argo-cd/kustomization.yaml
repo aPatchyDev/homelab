@@ -8,6 +8,3 @@ resources:
   - dex-server-metrics.yaml
   - controller-metrics.yaml
   - redis-metrics.yaml
-labels:
-  - pairs:
-      release: kprometheus

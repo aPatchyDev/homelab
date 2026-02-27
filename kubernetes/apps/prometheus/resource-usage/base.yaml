@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: pod-mapping-base
+spec:
+  groups:
+    - name: pod.mapping.base
+      rules:
+        - record: pod_origin
+          expr: >
+            count by (pod, namespace, origin_app) (
+              label_replace(
+                count by (pod, namespace) (kube_pod_info)
+                * on(namespace) group_left(name)
+                label_replace(argocd_app_info{name!="root"}, "namespace", "$1", "dest_namespace", "(.*)"),
+                "origin_app", "$1", "name", "(.*)"
+              )
+            )

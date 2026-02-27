@@ -11,6 +11,10 @@ prometheus:
   enabled: true
   prometheusSpec:
     scrapeConfigSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
     retention: "100y"
     retentionSize: "8GiB"
     storageSpec:
@@ -39,3 +43,9 @@ prometheus:
 
 prometheus-node-exporter:
   namespaceOverride: kube-system
+
+# Passed on to sub-chart
+# https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics
+kube-state-metrics:
+  metricLabelsAllowlist:
+    - pods=[app.kubernetes.io/part-of]
