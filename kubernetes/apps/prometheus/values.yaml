@@ -47,5 +47,6 @@ prometheus-node-exporter:
 # Passed on to sub-chart
 # https://artifacthub.io/packages/helm/prometheus-community/kube-state-metrics
 kube-state-metrics:
+  namespaceOverride: monitoring
   metricLabelsAllowlist:
     - pods=[app.kubernetes.io/part-of]

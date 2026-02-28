@@ -11,6 +11,14 @@ spec:
             count by (pod, namespace, origin_app) (
               label_replace(
                 kube_pod_labels{namespace="kube-system", label_app_kubernetes_io_part_of="prometheus-node-exporter"},
-                "origin_app", "prometheus", "pod", ".*"
+                "origin_app", "metric-observer", "pod", ".*"
+              )
+            )
+        - record: pod_origin
+          expr: >
+            count by (pod, namespace, origin_app) (
+              label_replace(
+                kube_pod_info{namespace="monitoring"},
+                "origin_app", "metric-observer", "pod", ".*"
               )
             )

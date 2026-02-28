@@ -152,3 +152,16 @@ Integrating the exceptions can be done in a few ways:
   - For pods in `kube-system` managed by an Argo CD app: target pods using label filter and apply Argo CD app name
 
 Assuming no Argo CD app takes control of `kube-system` namespace, the same tag can be used for base case and edge case.
+
+### Better Observability Resolution for Kube-Prometheus-Stack
+
+Kube-prometheus-stack deploys 3 types of containers
+- Prometheus node exporter
+- Kube-state-metrics
+- Prometheus
+
+Naively deploying the bundled Helm chart and aggregating the data as explained above results in all 3 types of containers being merged into a single data group. This can be problematic when comparing against other prometheus-compatible alternatives
+- [VictoriaMetrics](https://victoriametrics.com/products/open-source/)
+- [Grafana Mimir](https://grafana.com/oss/mimir/)
+
+By deploying the node exporter and kube-state-metrics to another namespace, it is possible to isolate the resource usage attributed to the prometheus operator
