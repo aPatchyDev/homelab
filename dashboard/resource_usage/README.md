@@ -3,7 +3,7 @@
 ## CPU Usage
 
 - `container_cpu_usage_seconds_total`: Cummulative CPU time (second)
-- `rate([1m])`: CPU core utilization during `1m` (decimal)
+- `rate([$__rate_interval])`: CPU core utilization during `$__rate_interval` (decimal)
     - Multiplied by `1000`: milli-core (mCPU)
         - `1000` = Total utilization of 1 CPU core
 
