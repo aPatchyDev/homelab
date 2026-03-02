@@ -570,6 +570,291 @@
         "x": 6,
         "y": 20
       },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.2",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (origin_app) (\n  (\n    increase(container_network_receive_bytes_total[$__rate_interval])\n  )\n  * on(pod, namespace) group_left(origin_app)\n  pod_origin\n)",
+          "legendFormat": "__auto",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Network Ingress",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Mixed --"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "dashed"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "dark-red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 18,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.2",
+      "targets": [
+        {
+          "adHocFiltersEnabled": false,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "hide": false,
+          "panelId": 9,
+          "refId": "A"
+        },
+        {
+          "adHocFiltersEnabled": false,
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "hide": false,
+          "panelId": 10,
+          "refId": "B"
+        }
+      ],
+      "title": "Node Utilization",
+      "transformations": [
+        {
+          "id": "prepareTimeSeries",
+          "options": {
+            "format": "multi"
+          }
+        },
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "Time",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value 2"
+                }
+              },
+              "operator": "/",
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value 1"
+                }
+              }
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "binary": {
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value 4"
+                }
+              },
+              "operator": "/",
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value 3"
+                }
+              }
+            },
+            "mode": "binary",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": false
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Value 1": true,
+              "Value 2": true,
+              "Value 3": true,
+              "Value 4": true
+            },
+            "includeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "Value 2 / Value 1": "CPU",
+              "Value 4 / Value 3": "Memory"
+            }
+          }
+        }
+      ],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bfcfjdo5xz37kb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 0,
+        "y": 29
+      },
       "id": 4,
       "options": {
         "legend": {
@@ -662,10 +947,10 @@
       "gridPos": {
         "h": 9,
         "w": 6,
-        "x": 12,
-        "y": 20
+        "x": 6,
+        "y": 29
       },
-      "id": 5,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [],
@@ -683,13 +968,121 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum by (origin_app) (\n  (\n    increase(container_network_receive_bytes_total[$__rate_interval])\n  )\n  * on(pod, namespace) group_left(origin_app)\n  pod_origin\n)",
+          "expr": "sum by (origin_app) (\n  (\n    increase(container_network_transmit_bytes_total[$__rate_interval])\n  )\n  * on(pod, namespace) group_left(origin_app)\n  pod_origin\n)",
           "legendFormat": "__auto",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Network Ingress",
+      "title": "Network Egress",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "bfcfjdo5xz37kb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "mCPU"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 0,
+        "y": 38
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "12.3.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bfcfjdo5xz37kb"
+          },
+          "editorMode": "code",
+          "expr": "sum(\n  rate(node_cpu_seconds_total{mode!=\"steal\"}[$__rate_interval])\n) * 1000",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Nodes",
+          "range": true,
+          "refId": "Nodes"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum(\n  rate(container_cpu_usage_seconds_total{container!=\"\", pod!=\"\"}[$__rate_interval])\n  * on(namespace, pod) group_left()\n  pod_origin\n) * 1000",
+          "legendFormat": "Applications",
+          "range": true,
+          "refId": "Applications"
+        }
+      ],
+      "title": "Node CPU Usage",
       "type": "timeseries"
     },
     {
@@ -755,12 +1148,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 18,
-        "y": 20
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 38
       },
-      "id": 6,
+      "id": 10,
       "options": {
         "legend": {
           "calcs": [],
@@ -777,14 +1170,27 @@
       "pluginVersion": "12.3.2",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "bfcfjdo5xz37kb"
+          },
           "editorMode": "code",
-          "expr": "sum by (origin_app) (\n  (\n    increase(container_network_transmit_bytes_total[$__rate_interval])\n  )\n  * on(pod, namespace) group_left(origin_app)\n  pod_origin\n)",
-          "legendFormat": "__auto",
+          "expr": "sum(node_memory_MemTotal_bytes)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Nodes",
           "range": true,
-          "refId": "A"
+          "refId": "Nodes"
+        },
+        {
+          "editorMode": "code",
+          "expr": "sum (\n  container_memory_working_set_bytes{container!=\"\", pod!=\"\"}\n  * on(pod, namespace) group_left(origin_app)\n  pod_origin\n)",
+          "legendFormat": "Applications",
+          "range": true,
+          "refId": "Applications"
         }
       ],
-      "title": "Network Egress",
+      "title": "Node Memory Usage",
       "type": "timeseries"
     }
   ],
@@ -796,8 +1202,8 @@
       {
         "allowCustomValue": false,
         "current": {
-          "text": "prometheus",
-          "value": "prometheus"
+          "text": "argo-cd",
+          "value": "argo-cd"
         },
         "definition": "label_values(pod_origin,origin_app)",
         "description": "Argo CD Apps",
@@ -823,5 +1229,5 @@
   "timezone": "browser",
   "title": "Resource Usage",
   "uid": "adhzf7w",
-  "version": 17
+  "version": 18
 }
