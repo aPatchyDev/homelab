@@ -8,11 +8,12 @@ terraform {
 		lock_method = "POST"
 		unlock_method = "DELETE"
 		retry_wait_min = 5
+		# Define the credentials in secret_config.http.tfbackend
+		# username = "<username>"
+		# password = "<Maintainer | Owner + api scoped token>"
 	}
 
 	encryption {
-		method "unencrypted" "migrate" {}
-
 		key_provider "pbkdf2" "by_passphrase" {
 			passphrase = var.tfstate_passphrase
 		}
@@ -23,13 +24,7 @@ terraform {
 
 		state {
 			method = method.aes_gcm.encrypt
-
-			fallback {
-				method = method.unencrypted.migrate
-			}
-
-			# # Uncomment below after migration completed and fallback block removed
-			# enforced = true
+			enforced = true
 		}
 	}
 
