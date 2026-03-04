@@ -1,9 +1,36 @@
 terraform {
 	required_version = ">= 1.11.0"
 
-	backend "local" {
-		# Prevent backup files cluttering the directory
-		path = "state/terraform.tfstate"
+	backend "http" {
+		address = local.backend_address
+		lock_address = "${local.backend_address}/lock"
+		unlock_address = "${local.backend_address}/lock"
+		lock_method = "POST"
+		unlock_method = "DELETE"
+		retry_wait_min = 5
+	}
+
+	encryption {
+		method "unencrypted" "migrate" {}
+
+		key_provider "pbkdf2" "by_passphrase" {
+			passphrase = var.tfstate_passphrase
+		}
+
+		method "aes_gcm" "encrypt" {
+			keys = key_provider.pbkdf2.by_passphrase
+		}
+
+		state {
+			method = method.aes_gcm.encrypt
+
+			fallback {
+				method = method.unencrypted.migrate
+			}
+
+			# # Uncomment below after migration completed and fallback block removed
+			# enforced = true
+		}
 	}
 
 	required_providers {

@@ -92,3 +92,14 @@ Does not integrate well with OpenTofu.
 
 Orchestration tool designed for code generation.  
 Deemed excessive at current scale.
+
+### Migrating to Gitlab State Storage
+
+Since `v1.8.3` OpenTofu does not allow sensitive values to be used in the `backend` block [for security](https://github.com/opentofu/opentofu/security/advisories/GHSA-wpr2-j6gr-pjw9). The recommended alternative is to [use backend config files](https://opentofu.org/docs/language/settings/backends/configuration/#file). One downside is that they are not automatically loaded and must be explicitly referenced in the `tofu init -backend-config=<path>` command (unlike input variables).
+- Project must have `Infrastructure` enabled in `Settings > General > 
+Visibility, project features, permissions`
+- Backend block also does not allow `ephemeral` values
+
+One thing to note is the permissions required for authentication.
+- Updating the state file requires `Maintainer | Owner` role + `api` scope
+- Managing versions of stored state file requires `Developer | Maintainer | Owner` role + `api` scope

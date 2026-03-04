@@ -9,4 +9,7 @@ locals {
 	talos_cluster_name = "cluster"
 	talos_master_address = module.kubemaster[0].ipv4[1][0]
 	talos_cluster_endpoint = "https://${local.talos_master_address}:6443"
+
+	# Gitlab Terraform State
+	backend_address = "https://gitlab.com/api/v4/projects/${var.gitlab_project_id}/terraform/state/${var.gitlab_state_name}"
 }
