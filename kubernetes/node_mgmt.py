@@ -45,8 +45,7 @@ def get_node_list():
 
 def retire_node(node: str):
     global errors
-    # Should `--delete-emptydir-data` be left out to allow for review?
-    res, out = exec(["kubectl", "drain", "--ignore-daemonsets", node])
+    res, out = exec(["kubectl", "drain", "--ignore-daemonsets", "--delete-emptydir-data", node])
     if res != 0:
         errors.append(out)
         return
