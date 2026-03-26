@@ -13,7 +13,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: route-test
+  name: route-subdomain-test
 spec:
   parentRefs:
   - name: gateway
@@ -28,7 +28,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: route-test
+  name: route-path-test
 spec:
   parentRefs:
   - name: gateway
