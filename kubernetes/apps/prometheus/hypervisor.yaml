@@ -7,4 +7,4 @@ spec:
     - labels:
         job: Hypervisor
       targets:
-        - 192.168.123.111:9100
+        - 192.168.219.111:9100

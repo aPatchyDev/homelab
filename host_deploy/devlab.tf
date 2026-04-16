@@ -13,6 +13,7 @@ module "devlab" {
 	vm_id = var.devlab.vm_id
 	password = var.devlab.password
 	description = var.devlab.description
+	autostart = var.devlab.autostart
 
 	privileged = false
 	cpu_cores = var.devlab.cpu_cores

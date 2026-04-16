@@ -153,7 +153,7 @@
             "includeByName": {},
             "indexByName": {},
             "renameByName": {
-              "C {instance=\"192.168.123.111:9100\", job=\"Hypervisor\"}": "Hit rate"
+              "C {instance=\"192.168.219.111:9100\", job=\"Hypervisor\"}": "Hit rate"
             }
           }
         }

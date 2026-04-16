@@ -10,6 +10,7 @@ resource "proxmox_virtual_environment_container" "this" {
 	vm_id = var.vm_id
 	description = var.description
 	start_on_boot = var.autostart
+	started = var.autostart
 	unprivileged = !var.privileged
 
 	initialization {

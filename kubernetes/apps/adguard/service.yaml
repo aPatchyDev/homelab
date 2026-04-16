@@ -41,7 +41,7 @@ kind: Service
 metadata:
   name: svc
   annotations:
-    metallb.io/loadBalancerIPs: 192.168.123.202
+    metallb.io/loadBalancerIPs: 192.168.219.202
     external-dns.alpha.kubernetes.io/hostname: adguard.home.arpa
 spec:
   selector:

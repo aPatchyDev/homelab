@@ -12,5 +12,6 @@ variable "devlab" {
 		mac_address = string
 		# Disk size in GiB
 		disk_size = number
+		autostart = bool
 	})
 }
