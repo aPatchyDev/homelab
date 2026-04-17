@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ../../bootstrap
   - password.yaml
+  - https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.4.1/standard-install.yaml
   - httproute.yaml
 patches:
   - path: user-patch.yaml
