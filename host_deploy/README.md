@@ -103,3 +103,32 @@ Visibility, project features, permissions`
 One thing to note is the permissions required for authentication.
 - Updating the state file requires `Maintainer | Owner` role + `api` scope
 - Managing versions of stored state file requires `Developer | Maintainer | Owner` role + `api` scope
+
+### Cluster reconstruction
+
+Talos OS requires cluster nodes to have unique hostnames.  
+When hostname conflict occurs, the nodes fail to join the cluster.
+
+The symptoms include:
+- `Stage = Running` but cluster of 1 machine
+- Logs of `<node> is not allowed to modify taints` + `Wait would exceed context deadline`
+- `kubectl get nodes` shows nodes missing
+
+Talos provider for Terraform / Opentofu does not directly expose hostname configuration.  
+Use `talos_machine_configuration_apply` resource + `config_patches` to apply the configuration shown in the [docs](https://docs.siderolabs.com/talos/v1.12/networking/configuration/hostname#configuration):
+
+```opentofu
+resource "talos_machine_configuration_apply" "<this>" {
+	# <...>
+	
+	config_patches = [
+		# <...> ,
+		yamlencode({
+			apiVersion = "v1alpha1"
+			kind = "HostnameConfig"
+			hostname = "<hostname>"
+			auto = "off"
+		})
+	]
+}
+```

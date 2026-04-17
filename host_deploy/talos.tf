@@ -96,13 +96,21 @@ resource "talos_machine_configuration_apply" "master" {
 	client_configuration = talos_machine_secrets.this.client_configuration
 	machine_configuration_input = data.talos_machine_configuration.master.machine_configuration
 	node = module.kubemaster[count.index].ipv4[1][0]
-	config_patches = [yamlencode({
-		machine = {
-			install = {
-				image = data.talos_image_factory_urls.this.urls.installer
+	config_patches = [
+		yamlencode({
+			machine = {
+				install = {
+					image = data.talos_image_factory_urls.this.urls.installer
+				}
 			}
-		}
-	})]
+		}),
+		yamlencode({
+			apiVersion = "v1alpha1"
+			kind = "HostnameConfig"
+			hostname = "${var.talos_master.name}-${count.index + 1}"
+			auto = "off"
+		})
+	]
 }
 
 resource "talos_machine_configuration_apply" "worker" {
@@ -111,13 +119,21 @@ resource "talos_machine_configuration_apply" "worker" {
 	client_configuration = talos_machine_secrets.this.client_configuration
 	machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
 	node = module.kubeworker[count.index].ipv4[1][0]
-	config_patches = [yamlencode({
-		machine = {
-			install = {
-				image = data.talos_image_factory_urls.this.urls.installer
+	config_patches = [
+		yamlencode({
+			machine = {
+				install = {
+					image = data.talos_image_factory_urls.this.urls.installer
+				}
 			}
-		}
-	})]
+		}),
+		yamlencode({
+			apiVersion = "v1alpha1"
+			kind = "HostnameConfig"
+			hostname = "${var.talos_worker.name}-${count.index + 1}"
+			auto = "off"
+		})
+	]
 }
 
 resource "talos_machine_bootstrap" "this" {
@@ -136,5 +152,20 @@ resource "talos_cluster_kubeconfig" "this" {
 
 output "kubeconfig" {
 	value = talos_cluster_kubeconfig.this.kubeconfig_raw
+	sensitive = true
+}
+
+data "talos_client_configuration" "this" {
+	cluster_name = local.talos_cluster_name
+	client_configuration = talos_machine_secrets.this.client_configuration
+	endpoints = [for m in module.kubemaster : m.ipv4[1][0]]
+	nodes = concat(
+		[for m in module.kubemaster : m.ipv4[1][0]],
+		[for w in module.kubeworker : w.ipv4[1][0]]
+	)
+}
+
+output "talosconfig" {
+	value = data.talos_client_configuration.this.talos_config
 	sensitive = true
 }
