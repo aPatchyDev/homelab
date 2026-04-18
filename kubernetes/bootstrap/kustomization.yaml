@@ -5,3 +5,5 @@ resources:
   - namespace.yaml
   # Set Argo CD version here: .........................<tag>
   - https://raw.githubusercontent.com/argoproj/argo-cd/v3.2.5/manifests/install.yaml
+patches:
+  - path: config-patch.yaml
